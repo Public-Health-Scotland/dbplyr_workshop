@@ -71,7 +71,7 @@ smr01_lothian <- simple_smr01_query |>
   filter(AGE_IN_YEARS >= 18) |>
   mutate(age_gpr = case_when(
     between(AGE_IN_YEARS, 18, 64) ~ "18-64",
-    between(AGE_IN_YEARS, 64, 89) ~ "18-89",
+    between(AGE_IN_YEARS, 65, 89) ~ "65-89",
     AGE_IN_YEARS >= 90 ~ "90+"
   )) |>
   mutate(dis_month = month(DISCHARGE_DATE)) |>
