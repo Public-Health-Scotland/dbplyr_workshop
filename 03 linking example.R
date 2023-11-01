@@ -7,8 +7,8 @@ deaths_query <- tbl(smra_conn, in_schema("ANALYSIS", "GRO_DEATHS_C")) |>
 
 # Previewing the object
 
-odbcPreviewObject(smra_conn, 10, table ="ANALYSIS.GRO_DEATHS_C") |> 
-  as_tibble() 
+odbcPreviewObject(smra_conn, 10, table = "ANALYSIS.GRO_DEATHS_C") |>
+  as_tibble()
 
 tbl(
   smra_conn,
@@ -37,7 +37,7 @@ simple_smr01_query <- tbl(smra_conn, "SMR01_PI") |>
 # Do a link using dplyr joins
 # Alternative is (getting) complicated SQL
 # Or extract separately and then join which is to be avoided!
-linked_1_query <- simple_smr01_query |> 
+linked_1_query <- simple_smr01_query |>
   inner_join(deaths_query, by = "LINK_NO")
 
 # We could probably write some slightly better SQL but not as easily!
@@ -49,36 +49,37 @@ linked_1_extract <- collect(linked_1_query)
 # The larger the extracts the faster this method is compared to joining separate
 # extracts
 
-# We can keep adding more manipulation code and create a complicated SQL query 
+# We can keep adding more manipulation code and create a complicated SQL query
 # using only dbplyr.
 library(lubridate)
 library(janitor)
 
-smr01_deaths <- simple_smr01_query |> 
+smr01_deaths <- simple_smr01_query |>
   # Lothian
-  filter(HBRES_KEYDATE == "S08000024") |> 
-  filter(AGE_IN_YEARS >= 18) |> 
-  mutate(dis_month = month(DISCHARGE_DATE)) |> 
-  inner_join(deaths_query, by = "LINK_NO") |> 
-  clean_names() |> 
-  show_query() |> 
+  filter(HBRES_KEYDATE == "S08000024") |>
+  filter(AGE_IN_YEARS >= 18) |>
+  mutate(dis_month = month(DISCHARGE_DATE)) |>
+  inner_join(deaths_query, by = "LINK_NO") |>
+  clean_names() |>
+  show_query() |>
   collect()
 
 # Even group and do aggregation
-smr01_lothian <- simple_smr01_query |> 
+smr01_lothian <- simple_smr01_query |>
   # Lothian
-  filter(HBRES_KEYDATE == "S08000024") |> 
-  filter(AGE_IN_YEARS >= 18) |> 
+  filter(HBRES_KEYDATE == "S08000024") |>
+  filter(AGE_IN_YEARS >= 18) |>
   mutate(age_gpr = case_when(
     between(AGE_IN_YEARS, 18, 64) ~ "18-64",
     between(AGE_IN_YEARS, 64, 89) ~ "18-89",
     AGE_IN_YEARS >= 90 ~ "90+"
-  )) |> 
-  mutate(dis_month = month(DISCHARGE_DATE)) |> 
+  )) |>
+  mutate(dis_month = month(DISCHARGE_DATE)) |>
   group_by(age_gpr, dis_month) |>
-  summarise(admissions = n(),
-            patients = n_distinct(LINK_NO),
-            .groups = "drop") |>
-  show_query() |> 
+  summarise(
+    admissions = n(),
+    patients = n_distinct(LINK_NO),
+    .groups = "drop"
+  ) |>
+  show_query() |>
   collect()
-  
